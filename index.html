@@ -166,7 +166,7 @@
       btn.textContent = cat;
       btn.addEventListener("click", () => {
         setActiveCategory(cat);
-        fetchImages(cat);
+        fetchMultipleImages(cat);
       });
       categoriesDiv.appendChild(btn);
     });
@@ -179,27 +179,31 @@
     searchInput.value = cat;
   }
 
-  async function fetchImages(category) {
+  async function fetchMultipleImages(category, count = 10) {
     loadingDiv.style.display = "block";
     errorDiv.style.display = "none";
     imagesContainer.innerHTML = "";
 
     try {
-      const res = await fetch(`https://${API_HOST}/?type=${encodeURIComponent(category.toLowerCase())}`, {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": API_KEY,
-          "x-rapidapi-host": API_HOST,
-        },
-      });
+      const images = [];
+      for (let i = 0; i < count; i++) {
+        const res = await fetch(`https://${API_HOST}/?type=${encodeURIComponent(category.toLowerCase())}`, {
+          method: "GET",
+          headers: {
+            "x-rapidapi-key": API_KEY,
+            "x-rapidapi-host": API_HOST,
+          },
+        });
 
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
 
-      const data = await res.json();
+        const data = await res.json();
+        if (data.url) images.push(data.url);
+      }
 
-      if (!Array.isArray(data) || data.length === 0) throw new Error("No images found.");
+      if (images.length === 0) throw new Error("No images found.");
 
-      data.forEach(url => {
+      images.forEach(url => {
         const img = document.createElement("img");
         img.src = url;
         img.alt = `${category} image`;
@@ -218,13 +222,13 @@
     const query = searchInput.value.trim();
     if (!query) return;
     setActiveCategory(query);
-    fetchImages(query);
+    fetchMultipleImages(query);
   });
 
   window.addEventListener("load", () => {
     initCategories();
     setActiveCategory(categories[0]);
-    fetchImages(categories[0]);
+    fetchMultipleImages(categories[0]);
   });
 </script>
 </body>
